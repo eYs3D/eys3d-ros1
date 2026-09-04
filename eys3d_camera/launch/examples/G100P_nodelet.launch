@@ -1,0 +1,48 @@
+<?xml version="1.0"?>
+<!--
+  Load the driver into a shared nodelet manager.
+
+  This is the ROS 1 zero-copy deployment: any other nodelet loaded into the
+  same manager receives the image and point-cloud messages as the very
+  shared_ptr the driver published, with no serialisation and no copy. A
+  driver started as a standalone node (the default in the per-model
+  launches) runs the same code but has to serialise to reach its
+  subscribers.
+
+  Start it, then load your own processing nodelet into the same manager:
+
+      roslaunch eys3d_camera G100P_nodelet.launch
+
+      rosrun nodelet nodelet load my_pkg/MyNodelet /eys3d_nodelet_manager
+
+  Keep num_worker_threads at or above 4: the driver alone needs concurrent
+  service, timer, action and reconfigure callbacks to make progress while
+  one of them is blocked in an SDK call.
+-->
+<launch>
+  <arg name="camera_name"    default="G100P_1"/>
+  <arg name="manager"        default="eys3d_nodelet_manager"/>
+  <arg name="mode_id"        default="-1"/>
+  <arg name="selfcal_enable" default="false"/>
+  <arg name="num_worker_threads" default="4"/>
+
+  <node pkg="nodelet" type="nodelet" name="$(arg manager)" args="manager"
+        output="screen">
+    <param name="num_worker_threads" value="$(arg num_worker_threads)"/>
+  </node>
+
+  <group ns="$(arg camera_name)">
+    <node pkg="nodelet" type="nodelet" name="eys3d_camera"
+          args="load eys3d_camera/CameraNodelet /$(arg manager)"
+          output="screen">
+      <rosparam file="$(find eys3d_camera)/cfg/filter_profiles/default.yaml"
+                command="load"/>
+      <param name="camera_name"    value="$(arg camera_name)"/>
+      <param name="model"          value="G100P"/>
+      <param name="mode_id"        value="$(arg mode_id)"/>
+      <param name="selfcal_enable" value="$(arg selfcal_enable)"/>
+      <param name="dm_quality_cfg_dir"
+             value="$(find eys3d_camera)/cfg/DM_Quality_Cfg"/>
+    </node>
+  </group>
+</launch>

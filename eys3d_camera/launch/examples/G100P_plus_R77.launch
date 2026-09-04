@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<!--
+  One G100+ and one R77 in the same graph.
+
+  Mixed-model setups need no serial pinning: the driver selects by the
+  model's USB PID, so each node finds its own camera as long as only one of
+  each model is attached. Add dev_serial_number / usb_port when a second
+  camera of either model joins.
+-->
+<launch>
+  <include file="$(find eys3d_camera)/launch/G100P.launch">
+    <arg name="camera_name" value="G100P_1"/>
+    <arg name="rviz"        value="false"/>
+  </include>
+
+  <include file="$(find eys3d_camera)/launch/R77.launch">
+    <arg name="camera_name" value="R77_1"/>
+    <arg name="rviz"        value="false"/>
+  </include>
+</launch>

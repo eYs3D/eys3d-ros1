@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<!--
+  All three camera meshes side by side, no hardware attached.
+
+  A quick visual diff of the three bodies — handy when checking that a mesh
+  edit did not change the wrong model.
+-->
+<launch>
+  <param name="robot_description"
+         command="$(find xacro)/xacro $(find eys3d_camera)/urdf/eys3d_three_models.urdf.xacro"/>
+
+  <node pkg="robot_state_publisher" type="robot_state_publisher"
+        name="robot_state_publisher" output="log"/>
+  <node pkg="rviz" type="rviz" name="rviz" output="log"/>
+</launch>

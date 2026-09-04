@@ -1,0 +1,58 @@
+<?xml version="1.0"?>
+<!--
+  Launch shortcut for the eYs3D G100+i depth camera.
+
+  Equivalent to:
+      roslaunch eys3d_camera camera.launch model:=G100Pi camera_name:=G100Pi_1
+
+  G100+i exposes only the 1280x720 resolution group.
+  Refer to launch/video_modes/G100Pi.yaml for the full mode catalogue.
+-->
+<launch>
+  <arg name="camera_name"       default="G100Pi_1"/>
+  <arg name="mode_id"           default="-1"
+       doc="Mode index from launch/video_modes/G100Pi.yaml; -1 = auto (signature default for the negotiated USB link)."/>
+  <arg name="dev_serial_number" default=""/>
+  <arg name="usb_port"          default=""/>
+
+  <arg name="depth_near_mm" default="-1"/>
+  <arg name="depth_far_mm"  default="-1"/>
+  <arg name="ir_value"      default="-1"/>
+
+  <arg name="colored_pointcloud" default="false"/>
+  <arg name="spatial_filter"     default="false"/>
+  <arg name="temporal_filter"    default="false"/>
+  <arg name="hole_filling"       default="0"/>
+  <arg name="filter_profile"     default="default"/>
+
+  <arg name="selfcal_enable" default="false"
+       doc="Enable in-stream self-calibration."/>
+
+  <arg name="diagnostics_rate_hz" default="1.0"/>
+  <arg name="output" default="screen"/>
+  <arg name="urdf"   default="true"/>
+  <arg name="rviz"   default="true"/>
+  <arg name="rviz_config" default=""/>
+
+  <include file="$(find eys3d_camera)/launch/camera.launch">
+    <arg name="model"             value="G100Pi"/>
+    <arg name="camera_name"       value="$(arg camera_name)"/>
+    <arg name="mode_id"           value="$(arg mode_id)"/>
+    <arg name="dev_serial_number" value="$(arg dev_serial_number)"/>
+    <arg name="usb_port"          value="$(arg usb_port)"/>
+    <arg name="depth_near_mm"     value="$(arg depth_near_mm)"/>
+    <arg name="depth_far_mm"      value="$(arg depth_far_mm)"/>
+    <arg name="ir_value"          value="$(arg ir_value)"/>
+    <arg name="colored_pointcloud" value="$(arg colored_pointcloud)"/>
+    <arg name="spatial_filter"    value="$(arg spatial_filter)"/>
+    <arg name="temporal_filter"   value="$(arg temporal_filter)"/>
+    <arg name="hole_filling"      value="$(arg hole_filling)"/>
+    <arg name="filter_profile"    value="$(arg filter_profile)"/>
+    <arg name="selfcal_enable"    value="$(arg selfcal_enable)"/>
+    <arg name="diagnostics_rate_hz" value="$(arg diagnostics_rate_hz)"/>
+    <arg name="output"            value="$(arg output)"/>
+    <arg name="urdf"              value="$(arg urdf)"/>
+    <arg name="rviz"              value="$(arg rviz)"/>
+    <arg name="rviz_config"       value="$(arg rviz_config)"/>
+  </include>
+</launch>

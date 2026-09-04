@@ -1,0 +1,57 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>eys3d_camera</name>
+  <version>1.0.0</version>
+  <description>
+    Driver for eYs3D stereo depth cameras (G100+, R77, G62).
+    Publishes color, depth, and point cloud topics on a REP-103 frame tree,
+    with in-stream self-calibration, depth post-processing, runtime stream
+    control, and hot-plug recovery. Built directly on the bundled eSPDI SDK,
+    with no wrapper layer.
+  </description>
+
+  <author>eYs3D Microelectronics</author>
+  <maintainer email="support@eys3d.com">eYs3D Microelectronics</maintainer>
+  <license>Apache-2.0</license>
+  <url type="repository">https://github.com/eYs3D/eys3d-ros1</url>
+  <url type="bugtracker">https://github.com/eYs3D/eys3d-ros1/issues</url>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <test_depend>roslaunch</test_depend>
+
+  <!-- Action definition (selfcal/run) is generated in-package. -->
+  <build_depend>message_generation</build_depend>
+  <exec_depend>message_runtime</exec_depend>
+
+  <depend>actionlib</depend>
+  <depend>actionlib_msgs</depend>
+  <depend>diagnostic_msgs</depend>
+  <!-- Runtime image/filter controls, served over dynamic_reconfigure
+       (and an rqt_reconfigure GUI for free). -->
+  <depend>dynamic_reconfigure</depend>
+  <depend>diagnostic_updater</depend>
+  <depend>geometry_msgs</depend>
+  <depend>nodelet</depend>
+  <depend>pluginlib</depend>
+  <depend>roscpp</depend>
+  <depend>roslib</depend>
+  <depend>sensor_msgs</depend>
+  <depend>std_msgs</depend>
+  <depend>std_srvs</depend>
+  <depend>tf2</depend>
+  <depend>tf2_ros</depend>
+  <depend>topic_tools</depend>
+
+  <build_depend>yaml-cpp</build_depend>
+  <exec_depend>yaml-cpp</exec_depend>
+
+  <!-- Launch-time only: URDF description and the bundled RViz layouts. -->
+  <exec_depend>robot_state_publisher</exec_depend>
+  <exec_depend>rviz</exec_depend>
+  <exec_depend>xacro</exec_depend>
+
+  <export>
+    <nodelet plugin="${prefix}/nodelet_plugins.xml"/>
+  </export>
+</package>

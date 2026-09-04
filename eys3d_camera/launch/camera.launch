@@ -1,0 +1,135 @@
+<?xml version="1.0"?>
+<!--
+  Generic eYs3D camera launch.
+
+  Examples:
+      roslaunch eys3d_camera camera.launch model:=G100P mode_id:=1
+      roslaunch eys3d_camera camera.launch model:=R77 camera_name:=R77_left
+      roslaunch eys3d_camera camera.launch model:=G100P usb_port:=2-3:1.0
+      roslaunch eys3d_camera camera.launch model:=G62 \
+          spatial_filter:=true hole_filling:=2
+
+  Prefer the per-model shortcuts (G100P.launch / G100Pi.launch / R77.launch /
+  G62.launch) for everyday use; this generic launch is for scripting and
+  multi-camera setups.
+
+  Filter tuning split:
+    * enable switches (spatial_filter, temporal_filter, hole_filling,
+      colored_pointcloud) stay on the launch command line — they decide
+      whether a filter stage runs at all.
+    * tuning values (alpha / delta / magnitude / holes_fill / persistence)
+      live in cfg/filter_profiles/<filter_profile>.yaml, loaded below.
+      Copy default.yaml and edit fields to author a custom profile.
+-->
+<launch>
+  <!-- Identity and device binding -->
+  <arg name="model"             default="G100P"
+       doc="Camera model. Catalogue file: launch/video_modes/&lt;model&gt;.yaml."/>
+  <arg name="camera_name"       default="camera"
+       doc="ROS namespace and frame-id prefix for this camera."/>
+  <arg name="mode_id"           default="-1"
+       doc="Mode index inside the catalogue; -1 = auto (signature default for the negotiated USB link)."/>
+  <arg name="dev_serial_number" default=""
+       doc="Bind to a camera by serial-number substring."/>
+  <arg name="usb_port"          default=""
+       doc="Bind to a camera by USB topology path, e.g. 2-3:1.0."/>
+  <arg name="video_modes_dir"   default=""
+       doc="Override the video-mode catalogue directory. Empty = the in-package one."/>
+
+  <!-- Depth range -->
+  <arg name="depth_near_mm" default="-1"
+       doc="-1 = per-model default; positive integer to override."/>
+  <arg name="depth_far_mm"  default="-1"
+       doc="-1 = per-model default; positive integer to override."/>
+
+  <!-- Image controls -->
+  <arg name="ir_value" default="-1"
+       doc="-1 = per-model default (G100+/R77 = 3, G62 = 60); 0 = projector off; positive = raw FW level."/>
+
+  <!-- Post-processing enables -->
+  <arg name="colored_pointcloud" default="false"
+       doc="Publish XYZRGB point cloud sampled from the latest left-color frame."/>
+  <arg name="spatial_filter"     default="false"
+       doc="Enable the disparity-domain edge-aware IIR spatial filter. Tuning lives in the filter_profile YAML."/>
+  <arg name="temporal_filter"    default="false"
+       doc="Enable the temporal filter. Tuning lives in the filter_profile YAML; runtime-tunable via dynamic_reconfigure."/>
+  <arg name="hole_filling"       default="0"
+       doc="Hole filling mode. 0=off; 1=fill_from_left; 2=farthest_from_around (try first); 3=nearest_from_around."/>
+  <arg name="filter_profile"     default="default"
+       doc="Filter tuning profile name (resolved to cfg/filter_profiles/&lt;name&gt;.yaml)."/>
+
+  <!-- Self-calibration -->
+  <arg name="selfcal_enable" default="false"
+       doc="Enable in-stream self-calibration: exposes the selfcal/run action and selfcal/commit service."/>
+
+  <!-- Output / diagnostics / visualisation -->
+  <arg name="diagnostics_rate_hz" default="1.0"
+       doc="/diagnostics publish rate. Below 0.001 disables diagnostics entirely."/>
+  <arg name="output" default="screen"
+       doc="Node output sink: screen or log."/>
+  <arg name="urdf"   default="true"
+       doc="Publish the camera model on &lt;camera_name&gt;/robot_description via robot_state_publisher."/>
+  <arg name="rviz"   default="true"
+       doc="Open RViz on the bundled layout for this model."/>
+  <arg name="rviz_config" default=""
+       doc="Override path to the .rviz file. Empty picks the bundled layout for
+            &lt;model&gt;, rewritten for &lt;camera_name&gt; when it is not the default."/>
+
+  <group ns="$(arg camera_name)">
+    <node pkg="eys3d_camera" type="eys3d_camera_node" name="eys3d_camera"
+          output="$(arg output)">
+      <!-- Filter tuning values first, so an explicit param below could
+           override one if a future launch chooses to expose it. -->
+      <rosparam file="$(find eys3d_camera)/cfg/filter_profiles/$(arg filter_profile).yaml"
+                command="load"/>
+
+      <param name="camera_name"       value="$(arg camera_name)"/>
+      <param name="model"             value="$(arg model)"/>
+      <param name="mode_id"           value="$(arg mode_id)"/>
+      <param name="dev_serial_number" value="$(arg dev_serial_number)"/>
+      <param name="usb_port"          value="$(arg usb_port)"/>
+      <param name="video_modes_dir"   value="$(arg video_modes_dir)"/>
+
+      <param name="depth_near_mm" value="$(arg depth_near_mm)"/>
+      <param name="depth_far_mm"  value="$(arg depth_far_mm)"/>
+      <param name="ir_value"      value="$(arg ir_value)"/>
+
+      <param name="colored_pointcloud" value="$(arg colored_pointcloud)"/>
+      <param name="spatial_filter"     value="$(arg spatial_filter)"/>
+      <param name="temporal_filter"    value="$(arg temporal_filter)"/>
+      <param name="hole_filling"       value="$(arg hole_filling)"/>
+
+      <param name="selfcal_enable"      value="$(arg selfcal_enable)"/>
+      <param name="diagnostics_rate_hz" value="$(arg diagnostics_rate_hz)"/>
+      <!-- Per-model depth-quality register tables, applied on the first
+           depth frame. -->
+      <param name="dm_quality_cfg_dir"
+             value="$(find eys3d_camera)/cfg/DM_Quality_Cfg"/>
+    </node>
+
+    <!-- Camera description. Namespaced so several cameras can publish their
+         own robot_description without colliding. -->
+    <group if="$(arg urdf)">
+      <param name="robot_description"
+             command="$(find xacro)/xacro $(find eys3d_camera)/urdf/eys3d_camera.urdf.xacro
+                      model:=$(arg model) camera_name:=$(arg camera_name)"/>
+      <node pkg="robot_state_publisher" type="robot_state_publisher"
+            name="robot_state_publisher" output="log"/>
+    </group>
+  </group>
+
+  <!-- Outside the camera namespace: the layout uses absolute topic names.
+       Named after the camera, not $(anon rviz), which roslaunch memoises per
+       id — two cameras would land on the same node name.
+
+       rviz_launcher rewrites the bundled layout for a renamed camera and then
+       execs rviz. Each option stays one token, so an empty rviz_config is
+       still a well-formed argument rather than consuming the __name:=
+       roslaunch appends after these. -->
+  <node if="$(arg rviz)" pkg="eys3d_camera" type="rviz_launcher"
+        name="rviz_$(arg camera_name)" output="log"
+        args="--default-layout=$(find eys3d_camera)/rviz/eys3d_camera_$(arg model).rviz
+              --camera-name=$(arg camera_name)
+              --default-name=$(arg model)_1
+              --config=$(arg rviz_config)"/>
+</launch>

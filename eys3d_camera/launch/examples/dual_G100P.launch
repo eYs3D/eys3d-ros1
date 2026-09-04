@@ -1,0 +1,35 @@
+<?xml version="1.0"?>
+<!--
+  Two G100+ cameras in one graph.
+
+  Each camera must be pinned to a specific device, otherwise both nodes race
+  for whichever one enumerates first. Pin by serial number (stable across
+  reboots and re-cabling) or by USB topology path (stable per physical port).
+  Find them with:
+
+      lsusb -d 3438:                      # eYs3D vendor id
+      rosrun eys3d_camera perf_monitor    # once one camera is up
+
+  RViz is left off here: two layouts fighting over one window is rarely what
+  you want. Start it separately against whichever camera you are inspecting.
+-->
+<launch>
+  <arg name="left_serial"  default=""/>
+  <arg name="right_serial" default=""/>
+  <arg name="left_usb_port"  default=""/>
+  <arg name="right_usb_port" default=""/>
+
+  <include file="$(find eys3d_camera)/launch/G100P.launch">
+    <arg name="camera_name"       value="G100P_left"/>
+    <arg name="dev_serial_number" value="$(arg left_serial)"/>
+    <arg name="usb_port"          value="$(arg left_usb_port)"/>
+    <arg name="rviz"              value="false"/>
+  </include>
+
+  <include file="$(find eys3d_camera)/launch/G100P.launch">
+    <arg name="camera_name"       value="G100P_right"/>
+    <arg name="dev_serial_number" value="$(arg right_serial)"/>
+    <arg name="usb_port"          value="$(arg right_usb_port)"/>
+    <arg name="rviz"              value="false"/>
+  </include>
+</launch>

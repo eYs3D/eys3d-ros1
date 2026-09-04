@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<!--
+  Show one camera's mesh in RViz with no hardware attached.
+
+  Useful for checking mount geometry and the frame tree before the camera
+  ships, or for sanity-checking a URDF edit.
+
+      roslaunch eys3d_camera display_model.launch model:=G62
+-->
+<launch>
+  <arg name="model"       default="G100P"/>
+  <arg name="camera_name" default="$(arg model)_1"/>
+
+  <param name="robot_description"
+         command="$(find xacro)/xacro $(find eys3d_camera)/urdf/eys3d_camera.urdf.xacro
+                  model:=$(arg model) camera_name:=$(arg camera_name)"/>
+
+  <node pkg="robot_state_publisher" type="robot_state_publisher"
+        name="robot_state_publisher" output="log"/>
+  <node pkg="rviz" type="rviz" name="rviz" output="log"
+        args="-d $(find eys3d_camera)/rviz/eys3d_camera_model.rviz"/>
+</launch>

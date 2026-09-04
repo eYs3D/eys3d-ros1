@@ -1,0 +1,13 @@
+<library path="lib/libeys3d_camera_nodelet">
+  <class name="eys3d_camera/CameraNodelet"
+         type="eys3d_camera::CameraNodelet"
+         base_class_type="nodelet::Nodelet">
+    <description>
+      Driver for eYs3D stereo depth cameras (G100+, R77, G62).
+      Publishes color, depth, and point cloud topics with a REP-103 frame
+      tree, and exposes runtime stream control, depth post-processing, and
+      in-stream self-calibration. Load it into a shared nodelet manager to
+      hand frames to downstream nodelets without serialising them.
+    </description>
+  </class>
+</library>
